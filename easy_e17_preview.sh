@@ -34,11 +34,11 @@ conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_
 
 efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje"
 efl_extra="imlib2 emotion elementary enlil libast python-evas python-ecore python-e_dbus python-edje python-ethumb python-emotion python-elementary shellementary"
-bin_basic="exchange e"
+bin_basic="e"
 bin_extra="e_phys editje elsa emote empower enjoy enki ephoto Eterm expedite exquisite eyelight rage"
 e_modules_efl="ethumb libeweather"
 e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar cpu deskshow diskio drawer efm_nav efm_path efm_pathbar everything-mpris everything-pidgin everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch itask itask-ng flame forecasts iiirk language mail mem moon mpdule net news notification eooorg penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan"
+e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling eenvader.fractal elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch itask itask-ng flame forecasts iiirk language mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
 
 packages_basic="$efl_basic $bin_basic"
 packages_half="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_extra"
