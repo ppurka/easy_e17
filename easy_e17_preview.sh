@@ -8,9 +8,14 @@
 # License: BSD licence                                                      #
 # Get the latest version at http://omicron.homeip.net/projects/#easy_e17.sh #
 # Coded by Brian 'morlenxus' Miculcy (morlenxus@gmx.net)                    #
+# Extra modifications by P. Purkayastha ( ppurka _at_ gmail _dot_ com )     #
+#   1. Added config dir ~/.config/easy_e17                                  #
+#   2. Added support for patches to individual packages                     #
+#   3. Compile and install packages in tmp_dir/compile                      #
+#   4. Keep track of packages installed earlier and completely remove them  #
 #                                                                           #
-last_changes="2010-10-12"                                                   #
-version="1.4.0"                                                             #
+last_changes="2011-12-23"                                                   #
+version="1.4.0.1"                                                           #
 #############################################################################
 
 
@@ -20,18 +25,22 @@ logs_path="$tmp_path/install_logs"
 status_path="$tmp_path/status"
 src_cache_path="$tmp_path/src_cache"
 src_path="$HOME/e17_src"
+tmp_compile_dir="$tmp_path/compile"
+tmp_install_dir="$tmp_path/install"
 
 src_url="http://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
-conf_files="/etc/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
+conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje"
+efl_basic="imlib2 eina eet evas ecore efreet eio eeze e_dbus embryo edje elementary"
 efl_extra="imlib2 emotion elementary enlil libast python-evas python-ecore python-e_dbus python-edje python-ethumb python-emotion python-elementary shellementary"
-bin_basic="exchange e"
+#bin_basic="exchange e"
+bin_basic="e emprint"
 bin_extra="e_phys editje elsa emote empower enjoy enki ephoto Eterm expedite exquisite eyelight rage"
-e_modules_efl="ethumb libeweather"
-e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar cpu deskshow diskio drawer efm_nav efm_path efm_pathbar everything-mpris everything-pidgin everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch itask itask-ng flame forecasts iiirk language mail mem moon mpdule net news notification eooorg penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan"
+#e_modules_efl="ethumb libeweather"
+#e_modules_bin="emprint exalt"
+#e_modules_extra="alarm calendar cpu deskshow diskio drawer efm_nav efm_path efm_pathbar everything-mpris everything-pidgin everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch itask itask-ng flame forecasts iiirk language mail mem moon mpdule net news notification eooorg penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan"
+e_modules_extra="comp-scale engage net tiling"
 
 packages_basic="$efl_basic $bin_basic"
 packages_half="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_extra"
@@ -411,7 +420,7 @@ function run_command ()
 	title=$3
 	log_title=$4
 	mode_needed=$5
-	cmd=$6
+	cmd="$6"
 
 	set_title "$name: $title ($pkg_pos/$pkg_total)"
 	echo -n "$log_title"
@@ -500,12 +509,17 @@ function compile ()
 		set_notification "critical" "Package '$name': sourcedir not found"
 		return
 	fi
-	cd "$path"
+    local installed_files="$HOME/.config/easy_e17/${name}.installed"
+    local curr_dir="$PWD"
+    cp -a "$path" "$tmp_compile_dir"
+	path="$tmp_compile_dir/$name"
+    cd "$path"
 
 	rm -f $status_path/$name.noerrors
 	rm -f "$logs_path/$name.log"
 
-	if [ $clean -ge 1 ]; then
+	#if [ $clean -ge 1 ]; then
+	if [ $clean -eq -10 ]; then # Disable clean. We don't need it.
 		if [ -e "Makefile" ]; then
 			if [ $clean -eq 1 ]; then
 				run_command "$name" "$path" "clean" "clean  : " "$mode" "$make -j $threads clean"
@@ -546,47 +560,107 @@ function compile ()
 			args="$args `echo $app_arg | cut -d':' -f2- | tr -s '+' ' '`"
 		fi
 	done
+
 	
 	if [ -e "autogen.sh" ]; then
+		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+		fi
 		run_command "$name" "$path" "autogen" "autogen: " "$mode"    "./autogen.sh --prefix=$install_path $accache $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-		run_command "$name" "$path" "install" "install: " "rootonly" "$make install"
+		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+        # Now remove the files installed
+        [ -e "$installed_files" ] && {
+            cat "$installed_files" | xargs rm -f
+        }
+        # Now move the files in $tmp_install_dir to $install_path
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+		if [ ! -e "$status_path/$name.noerrors" ] ; then
+            rm -rf "$tmp_install_dir"/*
+            return
+        fi
 	elif [ -e "bootstrap" ]; then
+		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"     "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+		fi
 		run_command "$name" "$path" "bootstrap" "bootstr: " "$mode"    "./bootstrap"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "configure" "config:  " "$mode"    "./configure --prefix=$install_path $accache $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "make"      "make:    " "$mode"    "$make -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-		run_command "$name" "$path" "install"   "install: " "rootonly" "$make install"
+		run_command "$name" "$path" "install"   "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+        # Now remove the files installed
+        [ -e "$installed_files" ] && {
+            cat "$installed_files" | xargs rm -f
+        }
+        # Now move the files in $tmp_install_dir to $install_path
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+		if [ ! -e "$status_path/$name.noerrors" ] ; then
+            rm -rf "$tmp_install_dir"/*
+            return
+        fi
 	elif [ -e "Makefile.PL" ]; then
+		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+		fi
 		run_command "$name" "$path" "perl"    "perl:    " "$mode"    "perl Makefile.PL prefix=$install_path $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-		run_command "$name" "$path" "install" "install: " "rootonly" "$make install"
+		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+        # Now remove the files installed
+        [ -e "$installed_files" ] && {
+            cat "$installed_files" | xargs rm -f
+        }
+        # Now move the files in $tmp_install_dir to $install_path
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+		if [ ! -e "$status_path/$name.noerrors" ] ; then
+            rm -rf "$tmp_install_dir"/*
+            return
+        fi
 	elif [ -e "setup.py" ]; then
+		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"    "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+		fi
 		run_command "$name" "$path" "python"   "python:  " "$mode"    "python setup.py build build_ext --include-dirs=$PYTHONINCLUDE $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 	elif [ -e "Makefile" ]; then
+		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+		fi
 		make_extra="PREFIX=$install_path"
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make $make_extra -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra install"
+		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+        # Now remove the files installed
+        [ -e "$installed_files" ] && {
+            cat "$installed_files" | xargs rm -f
+        }
+        # Now move the files in $tmp_install_dir to $install_path
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+		if [ ! -e "$status_path/$name.noerrors" ] ; then
+            rm -rf "$tmp_install_dir"/*
+            return
+        fi
 	else
 		echo "no build system"
 		set_notification "critical" "Package '$name': no build system"
 		touch $status_path/$name.nobuild
 		return
 	fi
+    # Now update the file containing the installation stuff
+    find "$tmp_install_dir" -type f -o -type l -o -type s -o -type p | \
+        sed -e "s@^${tmp_install_dir}@@" > "$installed_files"
+    rm -rf "$tmp_install_dir"/*
 	
 	if [ "$gen_docs" ]; then
 		if [ -e "gendoc" ]; then
@@ -600,6 +674,7 @@ function compile ()
 	rm -f $status_path/$name.noerrors
 	echo "ok"
 	set_notification "normal" "Package '$name': build successful"
+    cd "$curr_dir"
 }
 
 function rotate ()
@@ -827,6 +902,10 @@ accache=""
 easy_options=""
 command_options=$@
 clean=0
+mkdir -p "$HOME/.config/easy_e17" || {
+    echo "ERROR: Can not create config directory $HOME/.config/easy_e17" >&2
+    exit 1
+}
 
 # Check for alternate conf file first.
 test_options=$command_options
@@ -1035,6 +1114,8 @@ set_title "Basic system checks"
 echo -e "\033[1m-------------------------------\033[7m Basic system checks \033[0m\033[1m----------------------------\033[0m"
 echo -n "- creating temporary dirs .... "
 mkdir -p "$tmp_path"		2>/dev/null
+mkdir -p "$tmp_compile_dir"	2>/dev/null
+mkdir -p "$tmp_install_dir"	2>/dev/null
 mkdir -p "$logs_path"		2>/dev/null
 mkdir -p "$status_path"		2>/dev/null
 mkdir -p "$src_cache_path"	2>/dev/null
