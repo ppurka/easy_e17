@@ -575,7 +575,7 @@ function compile ()
             cat "$installed_files" | xargs rm -f
         }
         # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
             rm -rf "$tmp_install_dir"/*
             return
@@ -597,7 +597,7 @@ function compile ()
             cat "$installed_files" | xargs rm -f
         }
         # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
             rm -rf "$tmp_install_dir"/*
             return
@@ -617,7 +617,7 @@ function compile ()
             cat "$installed_files" | xargs rm -f
         }
         # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
             rm -rf "$tmp_install_dir"/*
             return
@@ -628,6 +628,7 @@ function compile ()
 		fi
 		run_command "$name" "$path" "python"   "python:  " "$mode"    "python setup.py build build_ext --include-dirs=$PYTHONINCLUDE $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+        # FIXME: How do I do DESTDIR here?
 		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 	elif [ -e "Makefile" ]; then
@@ -644,7 +645,7 @@ function compile ()
             cat "$installed_files" | xargs rm -f
         }
         # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -avf ${tmp_install_dir}${install_path}/* ${install_path}"
+        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
             rm -rf "$tmp_install_dir"/*
             return
