@@ -577,7 +577,7 @@ function compile ()
         # Now move the files in $tmp_install_dir to $install_path
         run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "$tmp_install_dir"/*
+            rm -rf "${tmp_install_dir}/${install_path}"
             return
         fi
 	elif [ -e "bootstrap" ]; then
@@ -599,7 +599,7 @@ function compile ()
         # Now move the files in $tmp_install_dir to $install_path
         run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "$tmp_install_dir"/*
+            rm -rf "${tmp_install_dir}/${install_path}"
             return
         fi
 	elif [ -e "Makefile.PL" ]; then
@@ -619,7 +619,7 @@ function compile ()
         # Now move the files in $tmp_install_dir to $install_path
         run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "$tmp_install_dir"/*
+            rm -rf "${tmp_install_dir}/${install_path}"
             return
         fi
 	elif [ -e "setup.py" ]; then
@@ -647,7 +647,7 @@ function compile ()
         # Now move the files in $tmp_install_dir to $install_path
         run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "$tmp_install_dir"/*
+            rm -rf "${tmp_install_dir}/${install_path}"
             return
         fi
 	else
@@ -659,7 +659,8 @@ function compile ()
     # Now update the file containing the installation stuff
     find "$tmp_install_dir" -type f -o -type l -o -type s -o -type p | \
         sed -e "s@^${tmp_install_dir}@@" > "$installed_files"
-    rm -rf "$tmp_install_dir"/*
+    rm -rf "${tmp_install_dir}/${install_path}"
+    rm -rf "${tmp_compile_dir}/${name}"
 	
 	if [ "$gen_docs" ]; then
 		if [ -e "gendoc" ]; then
