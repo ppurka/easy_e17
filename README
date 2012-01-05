@@ -30,3 +30,5 @@ The patched version of the script has several modifications:
     directory. The patch should be always named as <package_name>.patch.
     The package_name is the same name as the svn directory name (e.patch
     for e, eina.patch for eina, etc).
+ 4. The script can backup your current installation if you provide the -b
+    or --backup option.
