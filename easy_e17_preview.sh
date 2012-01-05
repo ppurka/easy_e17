@@ -45,6 +45,7 @@ packages_half="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_ex
 packages_full="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_extra $efl_extra $bin_extra"
 packages=$packages_basic	# default
 
+backup=0            # This will be set to 1 when backing up old install
 cmd_src_test="svn info"
 cmd_src_list="svn list -r"
 cmd_src_checkout="svn checkout -r "
@@ -159,6 +160,7 @@ function logo ()
 					echo "  -s, --skip-srcupdate                = don't update sources"
 					echo "  -a, --ask-on-src-conflicts          = ask what to do with a conflicting"
 					echo "                                        source file"
+                    echo "  -b, --backup                        = backup the current installation"
 					echo "      --skip=<name1>,<name2>,...      = this will skip installing the named"
 					echo "                                        libs/apps"
 					echo "  -d, --docs                          = generate programmers documentation"
@@ -926,6 +928,7 @@ do
 	fi
 	
 	case "$option" in
+        -b|--backup)                backup=1 ;;
 		-i|--install)				action="install" ;;
 		-u|--update)				action="update" ;;
 		--packagelist)
@@ -1145,6 +1148,15 @@ if [ ! "$action"  == "srcupdate" ]; then
 		echo "root"
 		mode="root"
 	fi
+
+    if [ "$backup" -eq 1 && -d "$install_path" ]; then
+        echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
+        case "$mode" in
+            user|root)  cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+            sudo)       echo "$sudopwd" | sudo -S cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+        esac
+        echo "Done."
+    fi
 
 	echo -n "- setting env variables ...... " 
 	export PATH="$install_path/bin:$PATH"
