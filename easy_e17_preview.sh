@@ -156,10 +156,6 @@ function logo ()
 					echo "      --srcrev=<revision>             = set the default source revision"
 					echo "      --asuser                        = do everything as the user, not as root"
 					echo "      --no-sudopwd                    = sudo don't need a password..."
-					echo "  -c, --clean                         = clean the sources before building"
-					echo "                                        (more --cleans means more cleaning, up"
-					echo "                                        to a maximum of three, which will"
-					echo "                                        uninstall e17)"
 					echo "  -s, --skip-srcupdate                = don't update sources"
 					echo "  -a, --ask-on-src-conflicts          = ask what to do with a conflicting"
 					echo "                                        source file"
@@ -516,40 +512,6 @@ function compile ()
 	rm -f $status_path/$name.noerrors
 	rm -f "$logs_path/$name.log"
 
-	#if [ $clean -ge 1 ]; then
-	if [ $clean -eq -10 ]; then # Disable clean. We don't need it.
-		if [ -e "Makefile" ]; then
-			if [ $clean -eq 1 ]; then
-				run_command "$name" "$path" "clean" "clean  : " "$mode" "$make -j $threads clean"
-				if [ ! -e "$status_path/$name.noerrors" ]; then
-					if [ "$skip_errors" ]; then
-						write_appname "$name" "hidden"	# clean might fail, that's ok
-					else
-						return
-					fi
-				fi
-			fi
-			if [ $clean -eq 2 ]; then
-				run_command "$name" "$path" "distclean" "distcln: " "$mode" "$make -j $threads clean distclean"
-				if [ ! -e "$status_path/$name.noerrors" ]; then
-					if [ "$skip_errors" ]; then
-						write_appname "$name" "hidden"	# distclean might fail, that's ok
-					else
-						return
-					fi
-				fi
-			fi
-			if [ $clean -ge 3 ]; then
-				run_command "$name" "$path" "uninstall" "uninst : " "rootonly" "$make -j $threads uninstall clean distclean"
-				if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-
-			    # It's no longer installed if we just uninstalled it.
-			    # Even if the uninstall failed, it's best to mark it as uninstalled so that a partial uninstall gets fixed later.
-			    rm -f $status_path/$name.installed
-			fi
-		fi
-	fi
-
 	# get autogen arguments
 	args=""
 	for app_arg in `echo $autogen_args | tr -s '\,' ' '`; do
@@ -901,7 +863,6 @@ define_os_vars
 accache=""
 easy_options=""
 command_options=$@
-clean=0
 mkdir -p "$HOME/.config/easy_e17" || {
     echo "ERROR: Can not create config directory $HOME/.config/easy_e17" >&2
     exit 1
@@ -1007,7 +968,6 @@ do
 			;;
 		--asuser)					asuser=1 ;;
 		--no-sudopwd)				no_sudopwd=1 ;;
-		-c|--clean)					clean=$(($clean + 1))	;;
 		-d|--docs)					gen_docs=1 ;;
 		--postscript)				easy_e17_post_script="$value" ;;
 		-s|--skip-srcupdate)		skip_srcupdate=1 ;;
