@@ -1152,7 +1152,7 @@ if [ ! "$action"  == "srcupdate" ]; then
 		mode="root"
 	fi
 
-    if [ "$backup" -eq 1 && -d "$install_path" ]; then
+    if [ "$backup" -eq 1 -a -d "$install_path" ]; then
         echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
         case "$mode" in
             user|root)  cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
