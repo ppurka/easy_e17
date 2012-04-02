@@ -14,8 +14,8 @@
 #   3. Compile and install packages in tmp_dir/compile                      #
 #   4. Keep track of packages installed earlier and completely remove them  #
 #                                                                           #
-last_changes="2011-12-23"                                                   #
-version="1.4.0.1"                                                           #
+version="1.4.1"                                                             #
+version_mark="dev"                                                          #
 #############################################################################
 
 
@@ -32,18 +32,20 @@ src_url="http://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
 conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje"
-efl_extra="imlib2 emotion elementary enlil libast python-evas python-ecore python-e_dbus python-edje python-ethumb python-emotion python-elementary shellementary"
-bin_basic="e"
-bin_extra="e_phys editje elsa emote empower enjoy enki ephoto Eterm expedite exquisite eyelight rage"
-e_modules_efl="ethumb libeweather"
+efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje azy ethumb elementary"
+efl_extra="imlib2 emotion enlil libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
+bin_basic="exchange e"
+bin_extra="e_cho e-type e_phys eblock econcentration editje eenvader.fractal elsa emote empower enjoy enki ephoto eskiss Eterm expedite exquisite eyelight rage"
+e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling eenvader.fractal elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch itask itask-ng flame forecasts iiirk language mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
+e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
+e_themes="darkness detourious efenniht"
 
-packages_basic="$efl_basic $bin_basic"
-packages_half="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_extra"
-packages_full="$efl_basic $bin_basic $e_modules_efl $e_modules_bin $e_modules_extra $efl_extra $bin_extra"
-packages=$packages_basic	# default
+packages_basic="$efl_basic $bin_basic $e_themes"
+packages_half="$efl_basic $bin_basic $e_themes $e_modules_efl $e_modules_bin $e_modules_extra"
+packages_full="$efl_basic $bin_basic $e_themes $e_modules_efl $e_modules_bin $e_modules_extra $efl_extra $bin_extra"
+packagelist="basic"
+packages=$packages_basic
 
 backup=0            # This will be set to 1 when backing up old install
 cmd_src_test="svn info"
@@ -52,12 +54,15 @@ cmd_src_checkout="svn checkout -r "
 cmd_src_update_conflicts_solve="svn update --accept theirs-full -r"
 cmd_src_update_conflicts_ask="svn update -r"
 src_mode="packages"
-ignore_dirs="devs DOCS E16 EXAMPLES TEST THEMES web"
+ignore_dirs="devs DOCS E16 EXAMPLES TEST web"
 autogen_args=""		# evas:--enable-gl-x11
 linux_distri=""		# if your distribution is wrongly detected, define it here
 nice_level=0		# nice level (19 == low, -20 == high)
 os=$(uname)			# operating system
 threads=2			# make -j <threads>
+
+deps_bin="automake byacc g++ gcc libtool pkg-config"
+deps_dev="dbus-1 fontconfig freetype GL jpeg lua5.1 png rsvg-2 udev xml2 X11 Xext Xrandr xcb"
 
 animation="star"
 online_source="http://omicron.homeip.net/projects/easy_e17/easy_e17.sh"	# URL of latest stable release
@@ -67,41 +72,31 @@ online_source="http://omicron.homeip.net/projects/easy_e17/easy_e17.sh"	# URL of
 function logo ()
 {
 	clear
-	echo -e "\033[1m-------------------------------\033[7m Easy_e17.sh $version \033[0m\033[1m------------------------------\033[0m"
-	echo -e "\033[1m  Developers:\033[0m      Brian 'morlenxus' Miculcy"
-	echo -e "                   David 'onefang' Seikel"
-	echo -e "\033[1m  Contributors:\033[0m    Tim 'amon' Zebulla"
-	echo -e "                   Daniel G. '_ke' Siegel"
-	echo -e "                   Stefan 'slax' Langner"
-	echo -e "                   Massimiliano 'Massi' Calamelli"
-	echo -e "                   Thomas 'thomasg' Gstaedtner"
-	echo -e "                   Roberto 'rex' Sigalotti"
-	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
+	if [ "$version_mark" ]; then
+		echo -e "\033[1m-------------------------------\033[7m Easy_e17.sh $version-$version_mark \033[0m\033[1m--------------------------\033[0m"
+	else
+		echo -e "\033[1m-------------------------------\033[7m Easy_e17.sh $version \033[0m\033[1m------------------------------\033[0m"
+	fi
 	echo -e "\033[1m  Updates:\033[0m         http://omicron.homeip.net/projects/#easy_e17.sh"
 	echo -e "\033[1m  Support:\033[0m         #e.de (irc.freenode.net)"
-	echo -e "                   morlenxus@gmx.net"
+	echo -e "                   morlenxus@gmx.net (Brian 'morlenxus' Miculcy)"
 	echo -e "\033[1m  Patches:\033[0m         Generally accepted, please contact me!"
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
-	echo 
 	echo
 	echo -e "\033[1m-----------------------------\033[7m Current Configuration \033[0m\033[1m----------------------------\033[0m"
 	echo "  Install path:    $install_path"
+	echo "  Logs path:       $logs_path"
 	echo "  Source path:     $src_path"
 	echo "  Source url:      $src_url (Revision: $src_rev)"
-	echo "  Source mode:     $src_mode"
-	echo "  Logs path:       $logs_path"
+	echo "  Source mode:     $src_mode (Packagelist: $packagelist)"
 	if [ "$linux_distri" ]; then
 		echo "  OS:              $os (Distribution: $linux_distri)"
 	else
 		echo "  OS:              $os"
 	fi
-	echo
-	echo "  Packages:        $packages"
 	if [ "$skip" ]; then echo "  Skipping:        $skip"; fi
 	if [ "$only" ]; then echo "  Only:            $only"; fi
-	echo
 	if [ -z "$action" ]; then action="MISSING!"; fi
-	echo "  Script action:   $action"
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 	echo
 	
@@ -125,27 +120,30 @@ function logo ()
 					echo "  If possible please provide a patch."
 				else if [ -z "$fullhelp" ]; then
 					echo -e "\033[1m-----------------\033[7m Short help 'easy_e17.sh <ACTION> <OPTIONS...>' \033[0m\033[1m---------------\033[0m"
-					echo "  -i, --install            = ACTION: install efl+e17"
-					echo "  -u, --update             = ACTION: update your installed software"
+					echo "  -i, --install            = install efl+e17"
+					echo "  -u, --update             = update your installed software"
+					echo
 					echo "      --packagelist=<list> = software package list:"
-					echo "                             - basic: only e17 (default)"
-					echo "                             - half:  only e17 and extra modules"
-					echo "                             - full:  simply everything"
-					echo "      --help               = full help"
+					echo "                             - basic (efl+e17)"
+					echo "                             - half  (efl+e17+e17modules)"
+					echo "                             - full  (efl+e17+e17modules+apps)"
+					echo
+					echo "      --help               = full help, many more options"
 				else
 					echo -e "\033[1m-----------------\033[7m Full help 'easy_e17.sh <ACTION> <OPTIONS...>' \033[0m\033[1m----------------\033[0m"
-					echo -e "  \033[1mACTION:\033[0m"
-					echo "  -i, --install                       = ACTION: install efl+e17"
-					echo "  -u, --update                        = ACTION: update installed software"
-					echo "      --only=<name1>,<name2>,...      = ACTION: install ONLY named libs/apps"
-					echo "      --packagelist=<list>            = software package list:"
-					echo "                                        - basic: only e17 (default)"
-					echo "                                        - half:  only e17 and extra modules"
-					echo "                                        - full:  simply everything"
-					echo
+					echo -e "  \033[1mACTION (ONLY SELECT ONE):\033[0m"
+					echo "  -i, --install                       = install efl+e17"
+					echo "  -u, --update                        = update installed software"
+					echo "      --only=<name1>,<name2>,...      = install ONLY named libs/apps"
 					echo "      --srcupdate                     = update only the sources"
 					echo "  -v, --check-script-version          = check for a newer release of easy_e17"
 					echo "      --help                          = this help"
+					echo
+					echo -e "  \033[1mPACKAGELIST:\033[0m"
+					echo "      --packagelist=<listname>        = software package list:"
+					echo "                                        - basic ($packages_basic)"
+					echo "                                        - half  ($packages_half)"
+					echo "                                        - full  ($packages_full)"
 					echo
 					echo -e "  \033[1mOPTIONS:\033[0m"
 					echo "      --conf=<file>                   = use an alternate configuration file"
@@ -248,15 +246,16 @@ function define_os_vars ()
 			install_path="/usr/pkg/e17"
 			ldconfig="config"
 			make="make"
-			export CFLAGS+="$CFLAGS -I/usr/pkg/include -I/usr/X11R7/include"
-			export CPPFLAGS+="$CPPFLAGS -I/usr/pkg/include -I/usr/X11R7/include"
-			export LDFLAGS+="$LDFLAGS -L/usr/pkg/include -L/usr/pkg/lib -L/usr/X11R7/lib"
+			export CFLAGS="$CFLAGS -I/usr/pkg/include -I/usr/X11R7/include"
+			export CPPFLAGS="$CPPFLAGS -I/usr/pkg/include -I/usr/X11R7/include"
+			export LDFLAGS="$LDFLAGS -L/usr/pkg/include -L/usr/pkg/lib -L/usr/X11R7/lib"
 			;;
 
 		Linux)
 			install_path="/opt/e17"
 			ldconfig="/sbin/ldconfig"
 			make="make"
+			export CFLAGS="$CFLAGS -fvisibility=hidden"
 
 			if [ -z "$linux_distri" ]; then
 				if [ -e "/etc/debian_version" ]; then linux_distri="debian"; fi
@@ -408,10 +407,6 @@ function get_src ()
 	fi
 }
 
-function build_each ()
-{	for pkg in $packages; do compile $pkg; done
-}
-
 function run_command ()
 {
 	name=$1
@@ -493,6 +488,8 @@ function compile ()
 			echo "SKIPPED"
 			touch $status_path/$name.skipped
 			return
+		else
+			rm -rf $status_path/$name.skipped
 		fi
 	fi
 
@@ -525,7 +522,6 @@ function compile ()
 			args="$args `echo $app_arg | cut -d':' -f2- | tr -s '+' ' '`"
 		fi
 	done
-
 	
 	if [ -e "autogen.sh" ]; then
 		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
@@ -770,6 +766,14 @@ function rotate ()
 			echo
 			echo "-> Get more informations by checking the log file '$logs_path/$name.log'!"
 			echo
+
+			# exit script or wait?
+			if [ "$wait" ]; then
+				echo
+				echo -e -n "\033[1mThe script is waiting here - simply press [enter] to exit.\033[0m"
+				read
+			fi	
+
 			set_title
 			exit 2
 		fi
@@ -935,13 +939,14 @@ do
 		-i|--install)				action="install" ;;
 		-u|--update)				action="update" ;;
 		--packagelist)
+			packagelist=$value
 			case $value in
 				"half")				packages="$packages_half" ;;
 				"full")				packages="$packages_full" ;;
 				*)					packages="$packages_basic" ;;
 			esac
 			;;
-		--conf)					;;
+		--conf)					;;	# FIXME
 		--only)
 			if [ -z "$value" ]; then
 				logo 0 "Missing value for argument '$option'!"
@@ -1066,6 +1071,17 @@ fi
 # check for script updates
 if [ "$action" == "script" ]; then
 	logo 0
+	echo -e "\033[1m-------------------------------------\033[7m AUTHORS \033[0m\033[1m----------------------------------\033[0m"
+	echo -e "\033[1m  Developers:\033[0m      Brian 'morlenxus' Miculcy"
+	echo -e "                   David 'onefang' Seikel"
+	echo -e "\033[1m  Contributors:\033[0m    Tim 'amon' Zebulla"
+	echo -e "                   Daniel G. '_ke' Siegel"
+	echo -e "                   Stefan 'slax' Langner"
+	echo -e "                   Massimiliano 'Massi' Calamelli"
+	echo -e "                   Thomas 'thomasg' Gstaedtner"
+	echo -e "                   Roberto 'rex' Sigalotti"
+	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
+	echo
 	echo -e "\033[1m------------------------------\033[7m Check script version \033[0m\033[1m----------------------------\033[0m"
 	check_script_version
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
@@ -1089,11 +1105,12 @@ mkdir -p "$src_path"		2>/dev/null
 chmod 700 "$tmp_path"
 echo "ok"
 
-max=15
-for dep in automake gcc $make `echo "$cmd_src_checkout" | cut -d' ' -f1`; do
+echo "- basic dependency check:"
+max=23
+for dep in $deps_bin $make `echo "$cmd_src_checkout" | cut -d' ' -f1`; do
 	cnt=${#dep}
 
-    echo -n "- '$dep' available "
+    echo -n "  - '$dep' "
     while [ ! $cnt = $max ]; do
         echo -n "."
         cnt=$(($cnt+1))
@@ -1103,6 +1120,26 @@ for dep in automake gcc $make `echo "$cmd_src_checkout" | cut -d' ' -f1`; do
 	if [ `type $dep &>/dev/null; echo $?` -ne 0 ]; then
 		echo -e "\033[1mNOT INSTALLED!\033[0m"
 		error "Command missing!"
+	else
+		echo "ok"
+	fi
+done
+
+compfile="$tmp_path/include_test.c"
+echo "main(){}" >$compfile
+for dep in $deps_dev; do
+	cnt=${#dep}
+
+    echo -n "  - '$dep' "
+    while [ ! $cnt = $max ]; do
+        echo -n "."
+        cnt=$(($cnt+1))
+    done
+    echo -n " "
+
+	if [ `gcc -o /dev/null $compfile -l$dep &>/dev/null; echo $?` -ne 0 ]; then
+		echo -e "\033[1mNOT INSTALLED!\033[0m"
+		error "Include missing!"
 	else
 		echo "ok"
 	fi
@@ -1234,8 +1271,70 @@ if [ ! "$action"  == "srcupdate" ]; then
 			fi
 			;;
 	esac
-fi
 
+	if [ "$only" ]; then
+		echo
+		echo "- matching packages with internal package lists (basic/half/full)..."
+
+		monly=$only
+		only=""
+		for opkg in $monly; do
+			found=0;
+			echo -n "  - $opkg: "
+
+			for pkg in $packages_basic; do
+				if [ "$opkg" == "$pkg" ]; then
+					found=1;
+				fi
+			done
+			if [ $found -eq 0 ]; then
+				for pkg in $packages_half; do
+					if [ "$opkg" == "$pkg" ]; then
+						if [ "$packagelist" == "basic" ]; then
+							found=2;
+						else
+							found=1;
+						fi
+					fi
+				done
+			fi
+			if [ $found -eq 0 ]; then
+				for pkg in $packages_full; do
+					if [ "$opkg" == "$pkg" ]; then
+						if [ "$packagelist" == "basic" ] ||
+						   [ "$packagelist" == "half" ]; then
+							found=3;
+						else
+							found=1;
+						fi
+					fi
+				done
+			fi
+
+			case $found in
+				"1")
+					echo "ok"
+					only="$only $opkg"
+					;;
+				"2")
+					echo -e "\033[1mok (SELECT PACKAGELIST: half)\033[0m"
+					only="$only $opkg"
+					packagelist="half"
+					packages="$packages_half"
+					;;
+				"3")
+					echo -e "\033[1mok (SELECT PACKAGELIST: full)\033[0m"
+					only="$only $opkg"
+					packagelist="full"
+					packages="$packages_full"
+					;;
+				*)
+					echo -e "\033[1mNOT FOUND!\033[0m"
+					;;
+			esac
+		done
+	fi
+fi
 echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 echo
 
@@ -1244,6 +1343,10 @@ echo
 echo -e "\033[1m-----------------------------\033[7m Source checkout/update \033[0m\033[1m---------------------------\033[0m"
 if [ -z "$skip_srcupdate" ]; then
 	rm "$tmp_path/source_update.log" 2>/dev/null
+	if [ ! "$action" == "install" ]; then
+		rm "$status_path/"*".installed"	2>/dev/null
+		rm "$status_path/"*".skipped"	2>/dev/null
+	fi
 
 	cd "$src_path"
 	if [ "`$cmd_src_test &>/dev/null; echo $?`" == 0 ]; then
@@ -1309,8 +1412,6 @@ if [ "$action" == "update" ] && [ -e "$tmp_path/source_update.log" ]; then
 	echo
 fi
 
-cnt_pkgs	# Count packages
-
 
 echo -n "-> PREPARING FOR PHASE 2..."
 set_title "Preparing for phase 2... compilation & installation"
@@ -1327,8 +1428,10 @@ elif [ "$action" == "update" ]; then
 fi
 logo 2
 echo -e "\033[1m------------------------------\033[7m Installing packages \033[0m\033[1m-----------------------------\033[0m"
-pkg_pos=0
-build_each
+cnt_pkgs
+for pkg in $packages; do
+	compile $pkg
+done
 echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 echo
 
@@ -1368,19 +1471,14 @@ sleep 5
 logo 3
 set_title "Finished"
 
-for file in $logs_path/*.log ; do
-	if [ "$file" == "$logs_path/*.log" ]; then break; fi
-
-	pkg=`basename "$file" | cut -d'.' -f1`
+for pkg in $packages; do
 	if [ -e "$status_path/$pkg.installed" ]; then
 		packages_installed="$packages_installed $pkg"
 	else
 		if [ -e "$status_path/$pkg.skipped" ]; then
 			packages_skipped="$packages_skipped $pkg"
 		else
-			if [ -e "$status_path/$pkg.nobuild" ]; then
-					packages_nobuild="$packages_nobuild $pkg"
-			else	packages_failed="$packages_failed $pkg"; fi
+			packages_failed="$packages_failed $pkg"
 		fi
 	fi
 done
@@ -1389,8 +1487,7 @@ echo -e "\033[1m--------------------------------\033[7m Cleaning temp dir \033[0
 if [ -z "$keep" ]; then
 	if [ "$packages_failed" ]; then
 		echo -n "- saving logs ................ "	
-		for pkg in $packages_installed; do
-			rm "$status_path/$pkg.installed" 2>/dev/null
+		for pkg in $packages_installed $packages_skipped; do
 			rm "$logs_path/$pkg.log" 2>/dev/null
 		done
 	else
@@ -1407,7 +1504,11 @@ echo
 if [ "$packages_failed" ]; then
 	echo -e "\033[1m---------------------------------\033[7m Failed packages \033[0m\033[1m------------------------------\033[0m"
 	for pkg in $packages_failed; do
-		echo "- $pkg (error log: $logs_path/$pkg.log)"
+		echo -n "- $pkg"
+		if [ -e "$logs_path/$pkg.log" ]; then
+			echo -n " (error log: $logs_path/$pkg.log)"
+		fi
+		echo
 	done
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 	echo 
@@ -1448,7 +1549,6 @@ echo "ADD THESE ENVIRONMENT VARIABLES:"
 echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 echo "export PATH=\"$install_path/bin:\$PATH\""
 echo "export PYTHONPATH=\"`python -c \"import distutils.sysconfig; print distutils.sysconfig.get_python_lib(prefix='$install_path')\" 2>/dev/null`:\$PYTHONPATH\""
-echo "export LD_LIBRARY_PATH=\"$install_path/lib:\$LD_LIBRARY_PATH\""
 echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 echo
 
