@@ -8,10 +8,11 @@
 # License: BSD licence                                                      #
 # Get the latest version at http://omicron.homeip.net/projects/#easy_e17.sh #
 # Coded by Brian 'morlenxus' Miculcy (morlenxus@gmx.net)                    #
+#                                                                           #
 # Extra modifications by P. Purkayastha ( ppurka _at_ gmail _dot_ com )     #
-#   1. Added config dir ~/.config/easy_e17                                  #
-#   2. Added support for patches to individual packages                     #
-#   3. Compile and install packages in tmp_dir/compile                      #
+#   1. Added config dir ~/.config/easy_e17				    #
+#   2. Added support for patches to individual packages			    #
+#   3. Compile and install packages in tmp_dir/compile			    #
 #   4. Keep track of packages installed earlier and completely remove them  #
 #                                                                           #
 version="1.4.1"                                                             #
@@ -38,7 +39,7 @@ bin_basic="exchange e"
 bin_extra="e_cho e-type e_phys eblock econcentration editje eenvader.fractal elsa emote empower enjoy enki ephoto eskiss Eterm expedite exquisite eyelight rage"
 e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
+e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
 e_themes="darkness detourious efenniht"
 
 packages_basic="$efl_basic $bin_basic $e_themes"
@@ -47,7 +48,7 @@ packages_full="$efl_basic $bin_basic $e_themes $e_modules_efl $e_modules_bin $e_
 packagelist="basic"
 packages=$packages_basic
 
-backup=0            # This will be set to 1 when backing up old install
+backup=0		# This will be set to 1 when backing up old install
 cmd_src_test="svn info"
 cmd_src_list="svn list -r"
 cmd_src_checkout="svn checkout -r "
@@ -158,10 +159,10 @@ function logo ()
 					echo "  -s, --skip-srcupdate                = don't update sources"
 					echo "  -a, --ask-on-src-conflicts          = ask what to do with a conflicting"
 					echo "                                        source file"
-                    echo "  -b, --backup                        = backup the current installation"
-                    echo "                                        WARNING: Use this option only if you"
-                    echo "                                        installed e17 in its own directory, eg."
-                    echo "                                        /usr/e17, /opt/e17, /usr/local/e17, etc."
+					echo "  -b, --backup			    = backup the current installation"
+					echo "					      WARNING: Use this option only if you"
+					echo "					      installed e17 in its own directory, eg."
+					echo "					      /usr/e17, /opt/e17, /usr/local/e17, etc."
 					echo "      --skip=<name1>,<name2>,...      = this will skip installing the named"
 					echo "                                        libs/apps"
 					echo "  -d, --docs                          = generate programmers documentation"
@@ -469,6 +470,8 @@ function write_appname ()
 function compile ()
 {
 	name=$1
+	local curr_dir="$PWD"
+	local installed_files="$HOME/.config/easy_e17/${name}.installed"
 
 	write_appname "$name"
 	
@@ -505,13 +508,13 @@ function compile ()
 		set_notification "critical" "Package '$name': sourcedir not found"
 		return
 	fi
-    local installed_files="$HOME/.config/easy_e17/${name}.installed"
-    local curr_dir="$PWD"
-    cp -a "$path" "$tmp_compile_dir"
-	path="$tmp_compile_dir/$name"
-    cd "$path"
 
-	rm -f $status_path/$name.noerrors
+	# Copy source files to tmp_compile_dir and change to that directory
+	cp -a "$path" "$tmp_compile_dir"
+	path="$tmp_compile_dir/$name"
+	cd "$path"
+
+	rm -f "$status_path/$name.noerrors"
 	rm -f "$logs_path/$name.log"
 
 	# get autogen arguments
@@ -523,30 +526,17 @@ function compile ()
 		fi
 	done
 	
+	if [ -e "$HOME/.config/easy_e17/$name.patch" ] ; then
+		run_command "$name" "$path" "patch"   "patch:	" "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
+	fi
 	if [ -e "autogen.sh" ]; then
-		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
-		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
-		fi
 		run_command "$name" "$path" "autogen" "autogen: " "$mode"    "./autogen.sh --prefix=$install_path $accache $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-        # Now remove the files installed
-        [ -e "$installed_files" ] && {
-            cat "$installed_files" | xargs rm -f
-        }
-        # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
-		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "${tmp_install_dir}/${install_path}"
-            return
-        fi
 	elif [ -e "bootstrap" ]; then
-		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
-		run_command "$name" "$path" "patch"     "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
-		fi
 		run_command "$name" "$path" "bootstrap" "bootstr: " "$mode"    "./bootstrap"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "configure" "config:  " "$mode"    "./configure --prefix=$install_path $accache $args"
@@ -555,75 +545,43 @@ function compile ()
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install"   "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-        # Now remove the files installed
-        [ -e "$installed_files" ] && {
-            cat "$installed_files" | xargs rm -f
-        }
-        # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
-		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "${tmp_install_dir}/${install_path}"
-            return
-        fi
 	elif [ -e "Makefile.PL" ]; then
-		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
-		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
-		fi
 		run_command "$name" "$path" "perl"    "perl:    " "$mode"    "perl Makefile.PL prefix=$install_path $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-        # Now remove the files installed
-        [ -e "$installed_files" ] && {
-            cat "$installed_files" | xargs rm -f
-        }
-        # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
-		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "${tmp_install_dir}/${install_path}"
-            return
-        fi
 	elif [ -e "setup.py" ]; then
-		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
-		run_command "$name" "$path" "patch"    "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
-		fi
 		run_command "$name" "$path" "python"   "python:  " "$mode"    "python setup.py build build_ext --include-dirs=$PYTHONINCLUDE $args"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-        # FIXME: How do I do DESTDIR here?
-		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
+		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --root=$tmp_install_dir --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 	elif [ -e "Makefile" ]; then
-		if [   -e "$HOME/.config/easy_e17/$name.patch" ] ; then
-		run_command "$name" "$path" "patch"   "patch:   " "$mode"    "patch -p1 -i $HOME/.config/easy_e17/$name.patch"
-		fi
 		make_extra="PREFIX=$install_path"
 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make $make_extra -j $threads"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra DESTDIR=$tmp_install_dir install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
-        # Now remove the files installed
-        [ -e "$installed_files" ] && {
-            cat "$installed_files" | xargs rm -f
-        }
-        # Now move the files in $tmp_install_dir to $install_path
-        run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
-		if [ ! -e "$status_path/$name.noerrors" ] ; then
-            rm -rf "${tmp_install_dir}/${install_path}"
-            return
-        fi
 	else
 		echo "no build system"
 		set_notification "critical" "Package '$name': no build system"
 		touch $status_path/$name.nobuild
 		return
 	fi
-    # Now update the file containing the installation stuff
-    find "$tmp_install_dir" -type f -o -type l -o -type s -o -type p | \
-        sed -e "s@^${tmp_install_dir}@@" > "$installed_files"
-    rm -rf "${tmp_install_dir}/${install_path}"
-    rm -rf "${tmp_compile_dir}/${name}"
+
+	# Now remove the files that were installed previously
+	[ -e "$installed_files" ] && {
+		cat "$installed_files" | xargs rm -f
+	}
+	# Now move the files in $tmp_install_dir to $install_path
+	run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
+	if [ ! -e "$status_path/$name.noerrors" ] ; then
+		rm -rf "${tmp_install_dir}/${install_path}"
+		return
+	fi
+	# Now update the file which records the installed files
+	find "$tmp_install_dir" -type f -o -type l -o -type s -o -type p | sed -e "s@^${tmp_install_dir}@@" > "$installed_files"
 	
 	if [ "$gen_docs" ]; then
 		if [ -e "gendoc" ]; then
@@ -637,7 +595,9 @@ function compile ()
 	rm -f $status_path/$name.noerrors
 	echo "ok"
 	set_notification "normal" "Package '$name': build successful"
-    cd "$curr_dir"
+	rm -rf "${tmp_install_dir}/${install_path}"
+	rm -rf "${tmp_compile_dir}/${name}"
+	cd "$curr_dir"
 }
 
 function rotate ()
@@ -873,7 +833,7 @@ accache=""
 easy_options=""
 command_options=$@
 mkdir -p "$HOME/.config/easy_e17" || {
-    echo "ERROR: Can not create config directory $HOME/.config/easy_e17" >&2
+    echo >&2 "ERROR: Can not create config directory $HOME/.config/easy_e17"
     exit 1
 }
 
@@ -935,7 +895,7 @@ do
 	fi
 	
 	case "$option" in
-        -b|--backup)                backup=1 ;;
+		-b|--backup)				backup=1 ;;
 		-i|--install)				action="install" ;;
 		-u|--update)				action="update" ;;
 		--packagelist)
@@ -1189,14 +1149,14 @@ if [ ! "$action"  == "srcupdate" ]; then
 		mode="root"
 	fi
 
-    if [ "$backup" -eq 1 -a -d "$install_path" ]; then
-        echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
-        case "$mode" in
-            user|root)  cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
-            sudo)       echo "$sudopwd" | sudo -S cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
-        esac
-        echo "Done."
-    fi
+	if [ "$backup" -eq 1 ] && [ -d "$install_path" ]; then
+		echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
+		case "$mode" in
+			user|root)	cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+			sudo)		echo "$sudopwd" | sudo -S cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+		esac
+		echo "Done."
+	fi
 
 	echo -n "- setting env variables ...... " 
 	export PATH="$install_path/bin:$PATH"
