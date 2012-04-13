@@ -1,0 +1,2 @@
+The patches must be applied in exactly the numbered sequence to
+easy-e17.sh r545, that is, 01-* should be applied before 02-*, etc.

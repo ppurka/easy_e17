@@ -1,0 +1,44 @@
+--- easy_e17.sh	2012-04-13 19:31:13.443895908 +0800
++++ easy_e17.sh.new03	2012-04-13 19:33:38.739900371 +0800
+@@ -42,6 +42,7 @@
+ packagelist="basic"
+ packages=$packages_basic
+ 
++backup=0		# This will be set to 1 when backing up old install
+ cmd_src_test="svn info"
+ cmd_src_list="svn list -r"
+ cmd_src_checkout="svn checkout -r "
+@@ -152,6 +153,10 @@
+ 					echo "  -s, --skip-srcupdate                = don't update sources"
+ 					echo "  -a, --ask-on-src-conflicts          = ask what to do with a conflicting"
+ 					echo "                                        source file"
++					echo "  -b, --backup			    = backup the current installation"
++					echo "					      WARNING: Use this option only if you"
++					echo "					      installed e17 in its own directory, eg."
++					echo "					      /usr/e17, /opt/e17, /usr/local/e17, etc."
+ 					echo "      --skip=<name1>,<name2>,...      = this will skip installing the named"
+ 					echo "                                        libs/apps"
+ 					echo "  -d, --docs                          = generate programmers documentation"
+@@ -881,6 +886,7 @@
+ 	fi
+ 	
+ 	case "$option" in
++		-b|--backup)				backup=1 ;;
+ 		-i|--install)				action="install" ;;
+ 		-u|--update)				action="update" ;;
+ 		--packagelist)
+@@ -1134,6 +1140,14 @@
+ 		mode="root"
+ 	fi
+ 
++	if [ "$backup" -eq 1 ] && [ -d "$install_path" ]; then
++		echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
++		case "$mode" in
++			user|root)	cp -Rp "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
++			sudo)		echo "$sudopwd" | sudo -S cp -Rp "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
++		esac
++		echo "Done."
++	fi
+ 
+ 	echo -n "- setting env variables ...... " 
+ 	export PATH="$install_path/bin:$PATH"

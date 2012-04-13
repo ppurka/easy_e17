@@ -1,0 +1,138 @@
+--- easy_e17.sh	2012-04-13 19:08:05.803853281 +0800
++++ easy_e17.sh.01	2012-04-13 19:29:10.919892145 +0800
+@@ -20,10 +20,12 @@
+ status_path="$tmp_path/status"
+ src_cache_path="$tmp_path/src_cache"
+ src_path="$HOME/e17_src"
++tmp_compile_dir="$tmp_path/compile"
++tmp_install_dir="$tmp_path/install"
+ 
+ src_url="http://svn.enlightenment.org/svn/e/trunk"
+ src_rev="HEAD"
+-conf_files="/etc/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
++conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
+ 
+ efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje azy ethumb elementary"
+ efl_extra="imlib2 emotion enlil libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
+@@ -406,7 +408,7 @@
+ 	title=$3
+ 	log_title=$4
+ 	mode_needed=$5
+-	cmd=$6
++	cmd="$6"
+ 
+ 	set_title "$name: $title ($pkg_pos/$pkg_total)"
+ 	echo -n "$log_title"
+@@ -461,6 +463,8 @@
+ function compile ()
+ {
+ 	name=$1
++	local curr_dir="$PWD"
++	local installed_files="$HOME/.config/easy_e17/${name}.installed"
+ 
+ 	write_appname "$name"
+ 	
+@@ -497,9 +501,13 @@
+ 		set_notification "critical" "Package '$name': sourcedir not found"
+ 		return
+ 	fi
++
++	# Copy source files to tmp_compile_dir and change to that directory
++	cp -Rp "$path" "$tmp_compile_dir"
++	path="$tmp_compile_dir/$name"
+ 	cd "$path"
+ 
+-	rm -f $status_path/$name.noerrors
++	rm -f "$status_path/$name.noerrors"
+ 	rm -f "$logs_path/$name.log"
+ 
+ 	if [ $clean -ge 1 ]; then
+@@ -549,7 +557,7 @@
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+-		run_command "$name" "$path" "install" "install: " "rootonly" "$make install"
++		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 	elif [ -e "bootstrap" ]; then
+ 		run_command "$name" "$path" "bootstrap" "bootstr: " "$mode"    "./bootstrap"
+@@ -558,25 +566,25 @@
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 		run_command "$name" "$path" "make"      "make:    " "$mode"    "$make -j $threads"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+-		run_command "$name" "$path" "install"   "install: " "rootonly" "$make install"
++		run_command "$name" "$path" "install"   "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 	elif [ -e "Makefile.PL" ]; then
+ 		run_command "$name" "$path" "perl"    "perl:    " "$mode"    "perl Makefile.PL prefix=$install_path $args"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make -j $threads"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+-		run_command "$name" "$path" "install" "install: " "rootonly" "$make install"
++		run_command "$name" "$path" "install" "install: " "rootonly" "$make DESTDIR=$tmp_install_dir install"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 	elif [ -e "setup.py" ]; then
+ 		run_command "$name" "$path" "python"   "python:  " "$mode"    "python setup.py build build_ext --include-dirs=$PYTHONINCLUDE $args"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+-		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
++		run_command "$name" "$path" "install"  "install: " "rootonly" "python setup.py install --root=$tmp_install_dir --prefix=$install_path install_headers --install-dir=$PYTHONINCLUDE"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 	elif [ -e "Makefile" ]; then
+ 		make_extra="PREFIX=$install_path"
+ 		run_command "$name" "$path" "make"    "make:    " "$mode"    "$make $make_extra -j $threads"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+-		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra install"
++		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra DESTDIR=$tmp_install_dir install"
+ 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+ 	else
+ 		echo "no build system"
+@@ -584,6 +592,19 @@
+ 		touch $status_path/$name.nobuild
+ 		return
+ 	fi
++
++	# Now remove the files that were installed previously
++	[ -e "$installed_files" ] && {
++		cat "$installed_files" | xargs rm -f
++	}
++	# Now move the files in $tmp_install_dir to $install_path
++	run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -Rpf ${tmp_install_dir}${install_path}/* ${install_path}"
++	if [ ! -e "$status_path/$name.noerrors" ] ; then
++		rm -rf "${tmp_install_dir}/${install_path}"
++		return
++	fi
++	# Now update the file which records the installed files
++	find "$tmp_install_dir" -type f -o -type l -o -type s -o -type p | sed -e "s@^${tmp_install_dir}@@" > "$installed_files"
+ 	
+ 	if [ "$gen_docs" ]; then
+ 		if [ -e "gendoc" ]; then
+@@ -597,6 +618,9 @@
+ 	rm -f $status_path/$name.noerrors
+ 	echo "ok"
+ 	set_notification "normal" "Package '$name': build successful"
++	rm -rf "${tmp_install_dir}/${install_path}"
++	rm -rf "${tmp_compile_dir}/${name}"
++	cd "$curr_dir"
+ }
+ 
+ function rotate ()
+@@ -832,6 +856,10 @@
+ easy_options=""
+ command_options=$@
+ clean=0
++mkdir -p "$HOME/.config/easy_e17" || {
++    echo >&2 "ERROR: Can not create config directory $HOME/.config/easy_e17"
++    exit 1
++}
+ 
+ # Check for alternate conf file first.
+ test_options=$command_options
+@@ -1052,6 +1080,8 @@
+ echo -e "\033[1m-------------------------------\033[7m Basic system checks \033[0m\033[1m----------------------------\033[0m"
+ echo -n "- creating temporary dirs .... "
+ mkdir -p "$tmp_path"		2>/dev/null
++mkdir -p "$tmp_compile_dir"	2>/dev/null
++mkdir -p "$tmp_install_dir"	2>/dev/null
+ mkdir -p "$logs_path"		2>/dev/null
+ mkdir -p "$status_path"		2>/dev/null
+ mkdir -p "$src_cache_path"	2>/dev/null
