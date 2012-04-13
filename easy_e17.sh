@@ -31,7 +31,7 @@ bin_basic="exchange e"
 bin_extra="e_cho e-type e_phys eblock econcentration editje eenvader.fractal elsa emote empower enjoy enki ephoto eskiss Eterm expedite exquisite eyelight rage"
 e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
+e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer e-tiling eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock tiling uptime weather winlist-ng winselector wlan xkbswitch"
 e_themes="darkness detourious efenniht"
 
 packages_basic="$efl_basic $bin_basic $e_themes"
