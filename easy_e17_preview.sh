@@ -510,7 +510,7 @@ function compile ()
 	fi
 
 	# Copy source files to tmp_compile_dir and change to that directory
-	cp -a "$path" "$tmp_compile_dir"
+	cp -Rp "$path" "$tmp_compile_dir"
 	path="$tmp_compile_dir/$name"
 	cd "$path"
 
@@ -575,7 +575,7 @@ function compile ()
 		cat "$installed_files" | xargs rm -f
 	}
 	# Now move the files in $tmp_install_dir to $install_path
-	run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -auvf ${tmp_install_dir}${install_path}/* ${install_path}"
+	run_command "$name" "$path" "install" "cp:     " "rootonly"  "cp -Rpf ${tmp_install_dir}${install_path}/* ${install_path}"
 	if [ ! -e "$status_path/$name.noerrors" ] ; then
 		rm -rf "${tmp_install_dir}/${install_path}"
 		return
@@ -1152,8 +1152,8 @@ if [ ! "$action"  == "srcupdate" ]; then
 	if [ "$backup" -eq 1 ] && [ -d "$install_path" ]; then
 		echo -n "- backing up current installation as ${install_path}-$(date '+%Y-%m-%d-%T') ... "
 		case "$mode" in
-			user|root)	cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
-			sudo)		echo "$sudopwd" | sudo -S cp -a "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+			user|root)	cp -Rp "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
+			sudo)		echo "$sudopwd" | sudo -S cp -Rp "$install_path" "${install_path}-$(date '+%Y-%m-%d-%T')" ;;
 		esac
 		echo "Done."
 	fi
