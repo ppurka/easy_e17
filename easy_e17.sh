@@ -21,18 +21,18 @@ status_path="$tmp_path/status"
 src_cache_path="$tmp_path/src_cache"
 src_path="$HOME/e17_src"
 
-src_url="http://svn.enlightenment.org/svn/e/trunk"
+src_url="https://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
-conf_files="/etc/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
+conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="eina eet evas ecore efreet eio eeze e_dbus embryo edje azy ethumb elementary"
-efl_extra="imlib2 emotion enlil ephysics libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
+efl_basic="eina eet eobj evas ecore efreet eio eeze e_dbus embryo edje azy ethumb elementary"
+efl_extra="imlib2 emotion enlil ephysics etrophy libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
 bin_basic="exchange e"
-bin_extra="e_cho e-type eblock econcentration editje eenvader.fractal elsa emote empower enjoy enki ephoto eskiss Eterm expedite exquisite eyelight rage terminology"
+bin_extra="clouseau e_cho e-type eblock econcentration econnman editje eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage terminology"
 e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
-e_modules_extra="alarm calendar comp-scale cpu deskshow diskio drawer eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places quickaccess rain screenshot skel slideshow snow taskbar tclock uptime weather winlist-ng winselector wlan"
-e_themes="darkness detourious efenniht"
+e_modules_extra="alarm comp-scale cpu deskshow diskio eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places rain rmb screenshot skel slideshow snow taskbar tclock uptime weather winlist-ng winselector wlan"
+e_themes="23oz darkness detourious efenniht"
 
 packages_basic="$efl_basic $bin_basic $e_themes"
 packages_half="$efl_basic $bin_basic $e_themes $e_modules_efl $e_modules_bin $e_modules_extra"
@@ -499,7 +499,7 @@ function compile ()
 	fi
 	cd "$path"
 
-	rm -f $status_path/$name.noerrors
+	rm -f "$status_path/$name.noerrors"
 	rm -f "$logs_path/$name.log"
 
 	if [ $clean -ge 1 ]; then
