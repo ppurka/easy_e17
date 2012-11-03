@@ -33,7 +33,7 @@ src_url="http://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
 conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="eina eet eobj evas ecore efreet eio eeze e_dbus embryo edje azy ethumb elementary"
+efl_basic="eina eet eobj evas ecore edbus efreet eio eeze e_dbus embryo edje azy ethumb elementary"
 efl_extra="imlib2 emotion enlil ephysics etrophy libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
 bin_basic="exchange e"
 bin_extra="clouseau e_cho e-type eblock econcentration econnman editje eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage terminology"
