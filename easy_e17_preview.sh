@@ -33,14 +33,14 @@ src_url="http://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
 conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="eina eet eobj evas ecore edbus efreet eio eeze e_dbus embryo edje azy ethumb elementary"
+efl_basic="efl evas_generic_loaders edbus e_dbus ecore efreet eio eeze edje azy ethumb elementary"
 efl_extra="imlib2 emotion enlil ephysics etrophy libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
 bin_basic="exchange e"
-bin_extra="clouseau e_cho e-type eblock econcentration econnman editje eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage terminology"
+bin_extra="clouseau e_cho e-type eblock econcentration econnman editje edje_viewer eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage terminology"
 e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
 e_modules_extra="alarm comp-scale cpu deskshow diskio eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places rain rmb screenshot skel slideshow snow taskbar tclock uptime weather winlist-ng winselector wlan"
-e_themes="23oz darkness detourious efenniht"
+e_themes="23oz b_and_w darkness detourious efenniht"
 
 packages_basic="$efl_basic $bin_basic $e_themes"
 packages_half="$efl_basic $bin_basic $e_themes $e_modules_efl $e_modules_bin $e_modules_extra"
@@ -195,6 +195,7 @@ function logo ()
 					echo "                                        <name1>:<opt1>+<opt2>,<name2>:<opt1>+..."
 					echo "      --cflags=<flag1>,<flag2>,...    = pass cflags to the gcc"
 					echo "      --ldflags=<flag1>,<flag2>,...   = pass ldflags to the gcc"
+					echo "      --pkg_config_path=<path1>,...   = pass pkg-config path"
 					echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 					echo
 					echo -e "\033[1m----------------------\033[7m Configurationfile '~/.easy_e17.conf' \033[0m\033[1m--------------------\033[0m"
@@ -999,6 +1000,13 @@ do
 			fi
 			LDFLAGS="$LDFLAGS `echo "$value" | tr -s '\,' '\ '`"
 			;;
+		--pkg_config_path)
+			if [ -z "$value" ]; then
+				logo 0 "Missing value for argument '$option'!"
+				exit 1
+			fi
+			PKG_CONFIG_PATH="$PKG_CONFIG_PATH:`echo "$value" | tr -s '\,' '\ '`"
+			;;
 		--help)
 			fullhelp=1
 			logo 0
@@ -1481,36 +1489,24 @@ if [ "$action" == "install" ]; then
 	echo
 	echo "INSTALL NOTES:"
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
-	echo "The most incredible and really unbelievable dream has become true:"
-	echo "You compiled e17 successfully!"
-	echo 
-	echo "Starting e17:"
-	echo "Create a file ~/.xsession with the line 'exec $install_path/bin/enlightenment_start'."
-	echo "Add a link to this file using 'ln -s ~/.xsession ~/.xinitrc'."
+	echo "To start e17 you need to create a file ~/.xsession with these lines:"
+	echo "--------- 8< ----------"
+	echo "export PATH=\"$install_path/bin:\$PATH\""
+	echo "export XDG_DATA_DIRS=\"/opt/e17/share:\$XDG_DATA_DIRS\""
+	echo "export PYTHONPATH=\"`python -c \"import distutils.sysconfig; print distutils.sysconfig.get_python_lib(prefix='$install_path')\" 2>/dev/null`:\$PYTHONPATH\""
+	echo "exec $install_path/bin/enlightenment_start"
+	echo "--------- >8 ----------"
+	echo "Add a link to this file using 'ln -s ~/.xsession ~/.xinitrc' ."
 	echo
 	echo "If you're using a login manager (GDM/KDM), select the session type 'default' in them."
 	echo "If you're using the startx command, simply execute it now."
 	echo
-	echo "Note: e17 is still not released and it won't be in the near future. So don't"
-	echo "ask for a stable release. e17 is still very buggy and only for experienced users"
-	echo "who know what they do..."
-	echo 
-	echo "Rasterman didn't write this script so don't ask him for help with it."
-	echo
 	echo "Hint: From now on you can easily keep your installation up to date."
 	echo "Simply run easy_e17.sh with -u instead of -i ."
 	echo
-	echo "We hope you will enjoy your trip into e17... Have fun!"
+	echo "We hope you will enjoy enlightenment... Have fun!"
 	echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
 fi
-
-echo
-echo "ADD THESE ENVIRONMENT VARIABLES:"
-echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
-echo "export PATH=\"$install_path/bin:\$PATH\""
-echo "export PYTHONPATH=\"`python -c \"import distutils.sysconfig; print distutils.sysconfig.get_python_lib(prefix='$install_path')\" 2>/dev/null`:\$PYTHONPATH\""
-echo -e "\033[1m--------------------------------------------------------------------------------\033[0m"
-echo
 
 # Clear this out if we ever set it.
 export CC=""
