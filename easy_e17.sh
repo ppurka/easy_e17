@@ -25,10 +25,10 @@ src_url="https://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
 conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="efl evas_generic_loaders edbus e_dbus ecore efreet eio eeze edje azy ethumb elementary"
-efl_extra="imlib2 emotion enlil ephysics etrophy libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
+efl_basic="efl evas_generic_loaders edbus e_dbus efreet eio eeze edje azy ethumb elementary"
+efl_extra="imlib2 emotion enlil ephysics etrophy geneet libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
 bin_basic="exchange e"
-bin_extra="clouseau e_cho e-type eblock econcentration econnman editje edje_viewer eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage terminology"
+bin_extra="clouseau e_cho e-type easyui eblock econcentration econnman editje edje_viewer eenvader.fractal efbb efx emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage shotgun terminology"
 e_modules_efl="libeweather"
 e_modules_bin="emprint exalt"
 e_modules_extra="alarm comp-scale cpu deskshow diskio eektool elfe empris engage eooorg everything-aspell everything-mpris everything-pidgin everything-places everything-shotgun everything-skeleton everything-tracker everything-wallpaper everything-websearch eweather exalt-client exebuf execwatch flame forecasts iiirk itask mail mem moon mpdule net news penguins photo places rain rmb screenshot skel slideshow snow taskbar tclock uptime weather winlist-ng winselector wlan"
@@ -54,7 +54,7 @@ os=$(uname)			# operating system
 threads=2			# make -j <threads>
 
 deps_bin="automake byacc g++ gcc libtool pkg-config"
-deps_dev="dbus-1 fontconfig freetype GL jpeg lua5.1 png rsvg-2 udev xml2 X11 Xext Xrandr xcb"
+deps_dev="dbus-1 fontconfig freetype GL jpeg lua|lua5.1 png rsvg-2 udev xml2 X11 Xext Xrandr xcb"
 
 animation="star"
 online_source="http://omicron.homeip.net/projects/easy_e17/easy_e17.sh"	# URL of latest stable release
@@ -579,6 +579,9 @@ function compile ()
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 		run_command "$name" "$path" "install" "install: " "rootonly" "$make $make_extra install"
 		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
+	elif [ -e "build.sh" ]; then
+		run_command "$name" "$path" "build" "build:     " "$mode"    "./build.sh -i"
+		if [ ! -e "$status_path/$name.noerrors" ] ; then return ; fi
 	else
 		echo "no build system"
 		set_notification "critical" "Package '$name': no build system"
@@ -1089,21 +1092,29 @@ done
 
 compfile="$tmp_path/include_test.c"
 echo "main(){}" >$compfile
-for dep in $deps_dev; do
-	cnt=${#dep}
+for deps in $deps_dev; do
+	found=0
+	for dep in `echo "$deps" | tr '|' ' '`; do
+		cnt=${#dep}
 
-    echo -n "  - '$dep' "
-    while [ ! $cnt = $max ]; do
-        echo -n "."
-        cnt=$(($cnt+1))
-    done
-    echo -n " "
+		echo -n "  - '$dep' "
+	    while [ ! $cnt = $max ]; do
+			echo -n "."
+			cnt=$(($cnt+1))
+		done
+		echo -n " "
+	
+		if [ `gcc -o /dev/null $compfile -l$dep &>/dev/null; echo $?` -ne 0 ]; then
+			echo -e "\033[1mnot found\033[0m"
+		else
+			found=1
+			echo "ok"
+			break
+		fi
+	done
 
-	if [ `gcc -o /dev/null $compfile -l$dep &>/dev/null; echo $?` -ne 0 ]; then
-		echo -e "\033[1mNOT INSTALLED!\033[0m"
-		error "Include missing!"
-	else
-		echo "ok"
+	if [ $found -eq 0 ]; then
+		error "Required include missing!"
 	fi
 done
 
@@ -1484,8 +1495,8 @@ if [ "$action" == "install" ]; then
 	echo "--------- >8 ----------"
 	echo "Add a link to this file using 'ln -s ~/.xsession ~/.xinitrc' ."
 	echo
-	echo "If you're using a login manager (GDM/KDM), select the session type 'default' in them."
-	echo "If you're using the startx command, simply execute it now."
+	echo "If you're using a login manager (GDM/KDM), select the session type 'default'"
+	echo "in them. If you're using the startx command, siply execute it now."
 	echo
 	echo "Hint: From now on you can easily keep your installation up to date."
 	echo "Simply run easy_e17.sh with -u instead of -i ."
