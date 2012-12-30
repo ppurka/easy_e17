@@ -29,11 +29,11 @@ src_path="$HOME/e17_src"
 tmp_compile_dir="$tmp_path/compile"
 tmp_install_dir="$tmp_path/install"
 
-src_url="https://svn.enlightenment.org/svn/e/trunk"
+src_url="http://svn.enlightenment.org/svn/e/trunk"
 src_rev="HEAD"
 conf_files="/etc/easy_e17.conf $HOME/.config/easy_e17/easy_e17.conf $HOME/.easy_e17.conf $PWD/.easy_e17.conf"
 
-efl_basic="efl evas_generic_loaders edbus e_dbus efreet eeze edje azy ethumb elementary"
+efl_basic="efl evas_generic_loaders e_dbus efreet eeze edje azy ethumb elementary"
 efl_extra="imlib2 emotion enlil ephysics etrophy geneet libast python-evas python-ecore python-e_dbus python-edje python-emotion python-elementary shellementary"
 bin_basic="exchange e"
 bin_extra="clouseau e_cho e-type easyui eblock econcentration econnman editje edje_viewer eenvader.fractal efbb emote empower enjoy enki entrance ephoto eskiss espionnage Eterm etypers exactness expedite exquisite eyelight rage shotgun terminology"
