@@ -1121,15 +1121,15 @@ for deps in $deps_dev; do
 	fi
 done
 
-
+LOGINNAME="$(whoami)"
 if [ ! "$action"  == "srcupdate" ]; then
 	echo -n "- build-user ................. "
-	if [ ! "$LOGNAME" == "root" ]; then
+	if [ ! "$LOGINNAME" == "root" ]; then
 		if [ "$asuser" ]; then
-			echo "$LOGNAME (as user)"
+			echo "$LOGINNAME (as user)"
 			mode="user"
 		else
-			echo "$LOGNAME (non-root)"
+			echo "$LOGINNAME (non-root)"
 			echo -n "- sudo available ............. "
 			sudotest=`type sudo &>/dev/null ; echo $?`
 			if [ "$sudotest" == 0 ]; then
