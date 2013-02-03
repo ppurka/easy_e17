@@ -48,6 +48,10 @@ packages_full="$efl_basic $efl_extra $bin_basic $e_themes $e_modules_efl $e_modu
 packagelist="basic"
 packages=$packages_basic
 
+# This is my own package list that overrides the above
+packages_half="efl evas_generic_loaders e_dbus elementary e comp-scale engage net terminology"
+packagelist="half"
+
 backup=0		# This will be set to 1 when backing up old install
 cmd_src_test="svn info"
 cmd_src_list="svn list -r"
