@@ -10,10 +10,20 @@
 # Coded by Brian 'morlenxus' Miculcy (morlenxus@gmx.net)                    #
 #                                                                           #
 # Extra modifications by P. Purkayastha ( ppurka _at_ gmail _dot_ com )     #
-#   1. Added config dir ~/.config/easy_e17				    #
-#   2. Added support for patches to individual packages			    #
-#   3. Compile and install packages in tmp_dir/compile			    #
+#   1. Added config dir ~/.config/easy_e17				                    #
+#   2. Added support for patches to individual packages			            #
+#   3. Compile and install packages in tmp_dir/compile			            #
 #   4. Keep track of packages installed earlier and completely remove them  #
+#                                   WARNING                                 #
+echo "
++------------------------------------NOTICE------------------------------------+
++   EFL has moved to a git based commit system that can be accessed at         +
++   https://git.enlightenment.org                                              +
++   Please consider moving to git since the svn repository that this script    +
++   uses will not be up to date any more. This version of the script is not    +
++   suitable for keeping an up to date enlightenment and EFL installation.     +
++------------------------------------------------------------------------------+
+" && sleep 1
 #                                                                           #
 version="1.4.1"                                                             #
 version_mark="dev"                                                          #
