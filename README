@@ -1,3 +1,8 @@
+easy_e17 is not functional any more because of the move of e from svn to
+git. An updated version of these patches is present in
+http://github.com/ppurka/easy_efl
+
+
 easy_e17:
 
 This is a script to compile and install the Enlightenment Foundation
